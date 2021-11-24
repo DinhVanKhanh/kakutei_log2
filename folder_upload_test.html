@@ -1,0 +1,24 @@
+<html>
+    <head>
+        <title>HTML5 Folder Upload Test</title>
+    </head>
+    <body>
+        <div id="container">
+            <input type="file" id="file_input"  name="file_input_folder[]"
+            multiple webkitdirectory="" mozdirectory="true" directory="" />
+        </div>
+        <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+        <script type="text/javascript">
+            var printFiles = function (event) {
+                var files = event.currentTarget.files;
+                for (var indx in files) {
+                    var curFile = files[indx];
+                    console.log(curFile.webkitRelativePath);
+                    console.log(curFile.slice(0,curFile.size));
+                }
+                console.log(files);
+            };
+            $('#file_input').change(printFiles);
+        </script>
+    </body>
+</html>

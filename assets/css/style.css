@@ -1,0 +1,203 @@
+body {
+    display: block;
+    width: 100%;
+    background-image: url("https://www.w3schools.com/cssref/paper.gif");
+}
+
+.heading , .section-head{
+    text-align: center;
+    margin-top:30px;
+}
+
+.section-top {
+    height: 100px;
+    margin: 30px 150px 0px 150px;
+}
+
+.section-bot {
+    margin: 20px 50px 50px 50px;
+}
+
+.copyright {
+    display: block;
+    margin-top: 100px;
+    text-align: center;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.copyright a {
+    text-decoration: none;
+    color: #EE4E44;
+}
+
+
+/****** CODE ******/
+
+.file-upload {
+    display: flex;
+    text-align: center;
+    font-family: Helvetica, Arial, sans-serif;
+    font-size: 12px;
+    justify-content: center;
+}
+
+.file-upload .file-select {
+    display: block;
+    border: 2px solid #dce4ec;
+    color: #34495e;
+    cursor: pointer;
+    height: 40px;
+    line-height: 40px;
+    text-align: left;
+    background: #FFFFFF;
+    overflow: hidden;
+    position: relative;
+    width: 50%;
+    border-radius: 10px;
+}
+
+.file-upload .file-select .file-select-button {
+    background: #dce4ec;
+    padding: 0 10px;
+    display: inline-block;
+    height: 40px;
+    line-height: 40px;
+}
+
+.file-upload .file-select .file-select-name {
+    line-height: 40px;
+    display: inline-block;
+    padding: 0 10px;
+}
+
+.file-upload .file-select:hover {
+    border-color: #34495e;
+    transition: all .2s ease-in-out;
+    -moz-transition: all .2s ease-in-out;
+    -webkit-transition: all .2s ease-in-out;
+    -o-transition: all .2s ease-in-out;
+}
+
+.file-upload .file-select:hover .file-select-button {
+    background: #34495e;
+    color: #FFFFFF;
+    transition: all .2s ease-in-out;
+    -moz-transition: all .2s ease-in-out;
+    -webkit-transition: all .2s ease-in-out;
+    -o-transition: all .2s ease-in-out;
+}
+
+.file-upload.active .file-select {
+    border-color: #3fa46a;
+    transition: all .2s ease-in-out;
+    -moz-transition: all .2s ease-in-out;
+    -webkit-transition: all .2s ease-in-out;
+    -o-transition: all .2s ease-in-out;
+}
+
+.file-upload.active .file-select .file-select-button {
+    background: #3fa46a;
+    color: #FFFFFF;
+    transition: all .2s ease-in-out;
+    -moz-transition: all .2s ease-in-out;
+    -webkit-transition: all .2s ease-in-out;
+    -o-transition: all .2s ease-in-out;
+}
+
+.file-upload .file-select input[type=file] {
+    z-index: 100;
+    cursor: pointer;
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    filter: alpha(opacity=0);
+}
+
+.file-upload .file-select.file-select-disabled {
+    opacity: 0.65;
+}
+
+.file-upload .file-select.file-select-disabled:hover {
+    cursor: default;
+    display: block;
+    border: 2px solid #dce4ec;
+    color: #34495e;
+    cursor: pointer;
+    height: 40px;
+    line-height: 40px;
+    margin-top: 5px;
+    text-align: left;
+    background: #FFFFFF;
+    overflow: hidden;
+    position: relative;
+}
+
+.file-upload .file-select.file-select-disabled:hover .file-select-button {
+    background: #dce4ec;
+    color: #666666;
+    padding: 0 10px;
+    display: inline-block;
+    height: 40px;
+    line-height: 40px;
+}
+
+.file-upload .file-select.file-select-disabled:hover .file-select-name {
+    line-height: 40px;
+    display: inline-block;
+    padding: 0 10px;
+}
+
+#folderTypeSelect {
+    display: none;
+}
+
+.custom-select {
+    width: auto;
+    border-radius: 10px;
+}
+
+select {
+    font-family: 'FontAwesome', 'Second Font name'
+}
+
+.btn {
+    border-radius: 10px;
+    background-color: #6c7ae0;
+    font-weight: bold;
+}
+
+.btn:hover {
+    background-color: #3fa46a;
+    border: #3fa46a;
+}
+
+.file-submit {
+    margin-left: 20px;
+}
+
+table {
+    border-radius: 20px;
+    overflow: hidden;
+    border-collapse: collapse;
+    background-color: white;
+    text-align: center;
+}
+
+table thead {
+    background-color: #6c7ae0;
+    color: white;
+}
+
+table tbody {
+    color: black;
+}
+
+#table_id ul {
+    list-style-type: none;
+}
