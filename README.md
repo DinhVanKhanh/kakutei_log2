@@ -1,0 +1,1 @@
+# kakutei_log2database
