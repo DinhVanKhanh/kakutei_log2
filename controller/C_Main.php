@@ -134,6 +134,8 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 						$UserSerialNumber = "";
 					}
 
+
+
 					if (strlen($UserSerialNumber) == 0) {
 						continue;
 					}
@@ -142,8 +144,29 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 					$data['UserClassification'] = $UserClassification;
 					$data['AdminComment']       = "From CSV";
 					$data['AdminCommentDate']   = "2021-10-24 00:00:00";
+
+					$UserIpAddressIdx = 7;
+					$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : "";
+					// parameter insert
+					$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}',NULL,'{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL)";
 				} else {
 					//user
+					$UserSerialNumberIdx = 2;
+					$UserSerialNumber = (array_key_exists([$UserSerialNumberIdx], $line)) ? trim($line[$UserSerialNumberIdx]) : "";
+					if (strlen($UserSerialNumber) == 0) {
+						continue;
+					}
+					$data['DownloadDate']       = $line[0] . ' ' . $line[1];
+					$data['UserSerialNumber']   = $UserSerialNumber;
+					$data['UserClassification'] = "2";
+					$data['AdminComment']       = "From CSV";
+					$data['AdminCommentDate']   = "2021-10-24 00:00:00";
+
+					$UserIpAddressIdx = 6;
+					$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : NULL;
+					// parameter insert
+					$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}',NULL,'{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL)";
+					break;
 				}
 				break;
 
@@ -160,7 +183,7 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 				$data['AdminComment']       = "From CSV";
 				$data['AdminCommentDate']   = "2021-10-21 00:00:00";
 
-				$UserIpAddressIdx = 6;
+				$UserIpAddressIdx = 5;
 				$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : "";
 				// parameter insert
 				$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}',NULL,'{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL)";
