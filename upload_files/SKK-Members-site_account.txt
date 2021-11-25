@@ -1,0 +1,8 @@
+/* SKK-Members-site */
+
+WordPress account
+
+http://192.168.3.214:8012/member/wp-login.php
+
+VietNam-admin
+dhMHH2gUGGIjWJJp5DfkIXM!

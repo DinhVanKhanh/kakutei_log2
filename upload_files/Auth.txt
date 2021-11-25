@@ -1,0 +1,44 @@
+- SVN: https://192.168.90.3/svn/CONTENT/PROJECT
+- FTP:
+user: hanchung
+pass: content@CT2021
+___________________________ SOURCE ___________________________
+
+1 . AWS
+.partner
+            Host:   https://dav-hp-partner.apn.mym.sorimachi.biz
+            URL-sample        https://partner.hp-sorimachi.mym.sorimachi.biz/saag/
+
+・member_sorimachi
+            Host:  https://dav-hp-member.apn.mym.sorimachi.biz
+            URL-sample        https://member.hp-sorimachi.mym.sorimachi.biz/phpinfo.php
+
+・tools_sorimachi
+            Host:  https://dav-hp-tools.apn.mym.sorimachi.biz
+            URL-sample        https://adm-hp-tools.apn.mym.sorimachi.biz/aaa.html
+
+・support_sorimachi
+            Host:  https://dav-hp-support.apn.mym.sorimachi.biz
+            URL-sample        https://support.hp-sorimachi.mym.sorimachi.biz/phpinfo.php
+
+・products_sorimachi
+            Host:  https://dav-hp-products.apn.mym.sorimachi.biz
+            URL-sample        https://hp-sorimachi.mym.sorimachi.biz/
+
+・info_sorimachi
+            Host:  https://dav-hp-info.apn.mym.sorimachi.biz
+            URL-sample        https://info.hp-sorimachi.mym.sorimachi.biz/
+
+・sorizo
+            Host:  https://dav-hp-sorizo.apn.mym.sorimachi.biz
+            URL-sample        https://www.hp-sorizo.mym.sorimachi.biz/
+
+2. 314
+ Host: 192.168.3.214
+ User: root
+ Pass: sggv2020
+
+3. 211
+ Host: 192.168.3.211
+ User: root
+ Pass: sggv2020

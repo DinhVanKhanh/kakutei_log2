@@ -84,7 +84,24 @@ switch ($action) {
 			echo json_encode($GLOBALS['view']->showResult($data_view));
 		} else {
 			move_uploaded_file($_FILES["fileTxtUpload"]["tmp_name"], $target_file);
-			ReadAndSaveToDB($target_file, substr($_FILES["fileTxtUpload"]["name"], 0, -4));
+			$isRead = ReadAndSaveToDB($target_file, substr($_FILES["fileTxtUpload"]["name"], 0, -4));
+			//check 
+			if (!$isRead) {
+				$uploadOK = 0;
+				$message['error'][] = "File name is not correct";
+				$data_view = [];
+				$result = [];
+				$result['filename'] = $_FILES["fileTxtUpload"]["name"];
+				$result['datetime'] = date('d/m/Y') . '_' . date('H:i:s');
+				$result['success_count'] = "No data";
+				$result['error_count'] = "No data";
+				$result['logfile'] = "";
+				$result['notes'] = $message['error'];
+				$data_view[] = $result;
+				$_SESSION['data_view'] = $data_view;
+				http_response_code(200);
+				echo json_encode($GLOBALS['view']->showResult($data_view));
+			}
 		}
 		break;
 }
@@ -94,6 +111,11 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 	//read line by line from txt file 
 	$fHandler = fopen($inputFile, 'r') or die('Can\'t open this file');
 
+	$data = HandlingFileNameInfo($nameOfFile);
+	//check name file
+	if (!$data['success']) {
+		return false;
+	}
 	//write log
 	$error_count = 0;
 	$success_count = 0;
@@ -103,6 +125,7 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 	// $log_file = fopen($GLOBALS['LOG_FILES_PATH'] . $log_file_name . '.txt', "a+");
 	$log_file = fopen($log_file_path, "a+");
 
+	$result = [];
 	$para_ins = "";
 	$i = 0;
 	while (!feof($fHandler)) {
@@ -113,81 +136,77 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 
 		$line = explode(',', $line);
 
-		$data = HandlingFileNameInfo($nameOfFile);
-		switch ($data['nameCategory']) {
-			case 'SMB':
-				//partner
-				if ($data['brandCategory'] == 'partner') {
-					//if userSerialNumber is NULL, not process
-					// $UserSerialNumberIdx = 2;
-					// $UserSerialNumber = (array_key_exists(2, $line)  ? trim($line[2]) : (array_key_exists(3, $line) ? trim($line[3]) : (array_key_exists(4, $line) ? trim($line[4]) : "")));
-					if (array_key_exists(2, $line)) {
-						$UserSerialNumber = trim($line[2]);
-						$UserClassification = 3;
-					} elseif (array_key_exists(3, $line)) {
-						$UserSerialNumber = trim($line[3]);
-						$UserClassification = 4;
-					} elseif (array_key_exists(4, $line)) {
-						$UserSerialNumber = trim($line[4]);
-						$UserClassification = 5;
-					} else {
-						$UserSerialNumber = "";
-					}
-
-
-
-					if (strlen($UserSerialNumber) == 0) {
-						continue;
-					}
-					$data['DownloadDate']       = $line[0] . ' ' . $line[1];
-					$data['UserSerialNumber']   = $UserSerialNumber;
-					$data['UserClassification'] = $UserClassification;
-					$data['AdminComment']       = "From CSV";
-					$data['AdminCommentDate']   = "2021-10-24 00:00:00";
-
-					$UserIpAddressIdx = 7;
-					$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : "";
-					// parameter insert
-					$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}',NULL,'{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL)";
-				} else {
-					//user
-					$UserSerialNumberIdx = 2;
-					$UserSerialNumber = (array_key_exists([$UserSerialNumberIdx], $line)) ? trim($line[$UserSerialNumberIdx]) : "";
-					if (strlen($UserSerialNumber) == 0) {
-						continue;
-					}
-					$data['DownloadDate']       = $line[0] . ' ' . $line[1];
-					$data['UserSerialNumber']   = $UserSerialNumber;
-					$data['UserClassification'] = "2";
-					$data['AdminComment']       = "From CSV";
-					$data['AdminCommentDate']   = "2021-10-24 00:00:00";
-
-					$UserIpAddressIdx = 6;
-					$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : NULL;
-					// parameter insert
-					$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}',NULL,'{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL)";
-					break;
-				}
-				break;
-
-			default:
+		if ($data['nameCategory'] == 'SMB') {
+			//partner
+			if ($data['brandCategory'] == 'partner') {
 				//if userSerialNumber is NULL, not process
+				// $UserSerialNumberIdx = 2;
+				// $UserSerialNumber = (array_key_exists(2, $line)  ? trim($line[2]) : (array_key_exists(3, $line) ? trim($line[3]) : (array_key_exists(4, $line) ? trim($line[4]) : "")));
+				if (array_key_exists(2, $line)) {
+					$UserIDPartner = trim($line[2]);
+					$UserClassification = 3;
+				} elseif (array_key_exists(3, $line)) {
+					$UserIDPartner = trim($line[3]);
+					$UserClassification = 4;
+				} elseif (array_key_exists(4, $line)) {
+					$UserIDPartner = trim($line[4]);
+					$UserClassification = 5;
+				} else {
+					$UserIDPartner = "";
+				}
+
+				//UserIDPartner
+				$UserSerialNumberIdx = 6;
+				$UserSerialNumber = (array_key_exists($UserSerialNumberIdx, $line)) ? $line[$UserSerialNumberIdx] : "";
+				if (strlen($UserSerialNumber) == 0 && strlen($UserSerialNumber) == 0) {
+					continue;
+				}
+				$data['DownloadDate']       = $line[0] . ' ' . $line[1];
+				$data['UserSerialNumber']   = $UserSerialNumber;
+				$data['UserIDPartner']      = $UserIDPartner;
+				$data['UserClassification'] = $UserClassification;
+				$data['AdminComment']       = "From CSV";
+				$data['AdminCommentDate']   = "2021-10-24 00:00:00";
+
+				$UserIpAddressIdx = 7;
+				$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : "NULL";
+				// parameter insert
+				$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}','{$data['UserIDPartner']}','{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL,'{$data['UserIPAddress']}')";
+			} else {
+				//user
 				$UserSerialNumberIdx = 2;
-				$UserSerialNumber = (array_key_exists($UserSerialNumberIdx, $line)) ? trim($line[$UserSerialNumberIdx]) : "";
+				$UserSerialNumber = (array_key_exists([$UserSerialNumberIdx], $line)) ? trim($line[$UserSerialNumberIdx]) : "";
 				if (strlen($UserSerialNumber) == 0) {
 					continue;
 				}
 				$data['DownloadDate']       = $line[0] . ' ' . $line[1];
 				$data['UserSerialNumber']   = $UserSerialNumber;
-				$data['UserClassification'] = "1";
+				$data['UserClassification'] = "2";
 				$data['AdminComment']       = "From CSV";
-				$data['AdminCommentDate']   = "2021-10-21 00:00:00";
+				$data['AdminCommentDate']   = "2021-10-24 00:00:00";
 
-				$UserIpAddressIdx = 5;
-				$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : "";
+				$UserIpAddressIdx = 6;
+				$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : "NULL";
 				// parameter insert
-				$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}',NULL,'{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL)";
-				break;
+				$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}',NULL,'{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL,'{$data['UserIPAddress']}')";
+			}
+		} else {
+			//if userSerialNumber is NULL, not process
+			$UserSerialNumberIdx = 2;
+			$UserSerialNumber = (array_key_exists($UserSerialNumberIdx, $line)) ? trim($line[$UserSerialNumberIdx]) : "";
+			if (strlen($UserSerialNumber) == 0) {
+				continue;
+			}
+			$data['DownloadDate']       = $line[0] . ' ' . $line[1];
+			$data['UserSerialNumber']   = $UserSerialNumber;
+			$data['UserClassification'] = "1";
+			$data['AdminComment']       = "From CSV";
+			$data['AdminCommentDate']   = "2021-10-21 00:00:00";
+
+			$UserIpAddressIdx = 6;
+			$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : "";
+			// parameter insert
+			$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}',NULL,'{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL,'{$data['UserIPAddress']}')";
 		}
 
 		//insert when reach 100 row, reset variables
@@ -229,7 +248,6 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 	fclose($log_file);
 	fclose($fHandler);
 
-	$result = [];
 	$result['filename'] = (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
 	$result['datetime'] = date('d/m/Y') . ' ' . date('H:i:s');
 	$result['success_count'] = $success_count;
@@ -243,6 +261,7 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 		$_SESSION['data_view'] = $data_view;
 		http_response_code(200);
 		echo json_encode($GLOBALS['view']->showResult($data_view));
+		return true;
 	} else {
 		return $result;
 	}
@@ -253,6 +272,7 @@ function HandlingFileNameInfo($inputFileName)
 	//file name has format: download_log_11-WinKakutei_AGRI_2006.txt
 	//file name has format: download_log_31-eTaxOp_SMB-partner_2007.txt
 	//file name has format: download_log_31-eTaxOp_SMB-user_2007.txt
+	$data = [];
 	$inputFileName = explode('-', $inputFileName);
 	$lenFile = count($inputFileName);
 
@@ -267,25 +287,21 @@ function HandlingFileNameInfo($inputFileName)
 
 			$namePartsValid = explode('_', $namePartsValid);
 			$DownloadProgramName = $namePartsValid[$downloadProgramIdx];
-			switch ($DownloadProgramName) {
-				case 'WinKakutei':
-					$DownloadProgramVersion = '11';
-					break;
-				case 'Gensen':
-					$DownloadProgramVersion = '21';
-					break;
-				case 'eTaxOp':
-					$DownloadProgramVersion = '31';
-					break;
+
+			$DownloadProgramVersion = DownloadProgramVersion($DownloadProgramName);
+			if (!$DownloadProgramVersion) {
+				$data['success'] = false;
+				break;
 			}
+
 			$DownloadProgramYear = $namePartsValid[$downloadYearIdx];
 			$nameCategory = $namePartsValid[$category];
 
-			$data = [];
 			$data['DownloadProgramName'] = $DownloadProgramVersion;
 			$data['DownloadProgramVersion'] = "";
 			$data['DownloadProgramYear']    = $DownloadProgramYear;
-			$data['Category']    = $nameCategory;
+			$data['nameCategory']    = $nameCategory;
+			$data['success'] = true;
 			break;
 
 			//SMB
@@ -299,38 +315,51 @@ function HandlingFileNameInfo($inputFileName)
 
 			$namePartsYear = $inputFileName[2];
 			$namePartsYear = explode('_', $namePartsYear);
-
 			$DownloadProgramName = $namePartsValid[$downloadProgramIdx];
 
-			switch ($DownloadProgramName) {
-				case 'WinKakutei':
-					$DownloadProgramVersion = '11';
-					break;
-				case 'Gensen':
-					$DownloadProgramVersion = '21';
-					break;
-				case 'eTaxOp':
-					$DownloadProgramVersion = '31';
-					break;
+			$DownloadProgramVersion = DownloadProgramVersion($DownloadProgramName);
+			if (!$DownloadProgramVersion) {
+				$data['success'] = false;
+				break;
 			}
+
 			$DownloadProgramYear = $namePartsYear[$downloadYearIdx];
 			$nameCategory = $namePartsValid[$category];
 			$bandCategory = $namePartsYear[$downloadProgramIdx];
 
-			$data = [];
 			$data['DownloadProgramName'] = $DownloadProgramVersion;
 			$data['DownloadProgramVersion'] = "";
 			$data['DownloadProgramYear']    = $DownloadProgramYear;
 			$data['nameCategory']    = $nameCategory;
 			$data['brandCategory']    = $bandCategory;
-
+			$data['success'] = true;
+			break;
 		default:
-			# code...
+			$data['success'] = false;
 			break;
 	}
-
 	return $data;
 }
+
+function DownloadProgramVersion($DownloadProgramName = null)
+{
+	switch ($DownloadProgramName) {
+		case 'WinKakutei':
+			$DownloadProgramVersion = '11';
+			break;
+		case 'Gensen':
+			$DownloadProgramVersion = '21';
+			break;
+		case 'eTaxOp':
+			$DownloadProgramVersion = '31';
+			break;
+		default:
+			$DownloadProgramVersion = false;
+			break;
+	}
+	return $DownloadProgramVersion;
+}
+
 function filterStringValid($string)
 {
 }
