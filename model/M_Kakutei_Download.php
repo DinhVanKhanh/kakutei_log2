@@ -13,7 +13,6 @@ class M_Kakutei_Download extends Database
 		$this->conn->beginTransaction();
 
 		try {
-
 			$query = "INSERT INTO $this->table (DownloadDate, DownloadProgramName, DownloadProgramYear, DownloadProgramVersion, UserClassification, UserSerialNumber, UserIDPartner, AdminComment, AdminCommentDate, DeleteFlag, DeleteFlagDate) VALUES (:DownloadDate, :DownloadProgramName, :DownloadProgramYear, :DownloadProgramVersion, :UserClassification, :UserSerialNumber, :UserIDPartner, :AdminComment, :AdminCommentDate, '', '')";
 			$stmt = $this->conn->prepare($query);
 			$stmt->bindParam(":DownloadDate", $DownloadDate);

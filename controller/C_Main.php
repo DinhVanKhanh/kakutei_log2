@@ -20,7 +20,6 @@ switch ($action) {
 		break;
 	case 'uploadFileZip':
 		$file_name = $_FILES['zipFileUpload']['name'];
-
 		break;
 	case 'uploadFolder':
 		$folder_upload_name = $_POST['folder_name'];
@@ -29,9 +28,12 @@ switch ($action) {
 			mkdir($GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name, 0777);
 		}
 		$data_view = [];
+		$target_file = "";
+		$target_dir = $GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name;
+
 		foreach ($_FILES['folderUpload']['name'] as $i => $name) {
 			if (strlen($_FILES['folderUpload']['name'][$i]) > 1) {
-				$target_file = $GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name . basename($_FILES['folderUpload']['name'][$i]);
+				$target_file = $GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name . DIRECTORY_SEPARATOR . basename($_FILES['folderUpload']['name'][$i]);
 				$fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
 
 				if ($fileType != "txt") {
@@ -39,9 +41,14 @@ switch ($action) {
 					$note = "File extension must be txt";
 				}
 				move_uploaded_file($_FILES['folderUpload']['tmp_name'][$i], $target_file);
-				$data_view[] = ReadAndSaveToDB($target_file, substr($_FILES["folderUpload"]["name"][$i], 0, -4), "folder", $folder_upload_name);
+				// $data_view[] = ReadAndSaveToDB($target_file, substr($_FILES["folderUpload"]["name"][$i], 0, -4), "folder", $folder_upload_name);
 			}
 		}
+		$data_view = readDirAndInsert($target_dir);
+		// echo '<pre>';
+		// print_r("countFileInDir:" . @$_SESSION['countFileInDir']);
+		// echo '<pre>';
+		// die();
 		$_SESSION['data_view'] = $data_view;
 		http_response_code(200);
 		echo json_encode($GLOBALS['view']->showResult($data_view));
@@ -49,7 +56,7 @@ switch ($action) {
 	case 'uploadLogFileTxt':
 		$message = [];
 		$uploadOK = 1;
-
+		$err = "";
 		if (!file_exists($_FILES['fileTxtUpload']['tmp_name']) || !is_uploaded_file($_FILES['fileTxtUpload']['tmp_name'])) {
 			$uploadOK = 0;
 			$message['error'][] = "File does not exist, pls try again";
@@ -68,7 +75,7 @@ switch ($action) {
 			$uploadOK = 0;
 			$message['error'][] = "File extension must be .txt";
 		}
-
+		// $err = checkListErrorFile($_FILES['fileTxtUpload']);
 		if ($uploadOK == 0) {
 			$data_view = [];
 			$result = [];
@@ -105,16 +112,22 @@ switch ($action) {
 		}
 		break;
 }
-
 function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolder = "")
 {
 	//read line by line from txt file 
 	$fHandler = fopen($inputFile, 'r') or die('Can\'t open this file');
+	$result = [];
 
 	$data = HandlingFileNameInfo($nameOfFile);
 	//check name file
 	if (!$data['success']) {
-		return false;
+		$result['filename'] =  (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
+		$result['datetime'] = date('d/m/Y') . '_' . date('H:i:s');
+		$result['success_count'] = "No data";
+		$result['error_count'] = "No data";
+		$result['logfile'] = "";
+		$result['notes'] = 'File name is not correct';
+		return $result;
 	}
 	//write log
 	$error_count = 0;
@@ -125,7 +138,6 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 	// $log_file = fopen($GLOBALS['LOG_FILES_PATH'] . $log_file_name . '.txt', "a+");
 	$log_file = fopen($log_file_path, "a+");
 
-	$result = [];
 	$para_ins = "";
 	$i = 0;
 	while (!feof($fHandler)) {
@@ -175,17 +187,17 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 			} else {
 				//user
 				$UserSerialNumberIdx = 2;
-				$UserSerialNumber = (array_key_exists([$UserSerialNumberIdx], $line)) ? trim($line[$UserSerialNumberIdx]) : "";
+				$UserSerialNumber = (array_key_exists($UserSerialNumberIdx, $line)) ? trim($line[$UserSerialNumberIdx]) : "";
 				if (strlen($UserSerialNumber) == 0) {
 					continue;
 				}
 				$data['DownloadDate']       = $line[0] . ' ' . $line[1];
 				$data['UserSerialNumber']   = $UserSerialNumber;
-				$data['UserClassification'] = "2";
+				$data['UserClassification'] = 2;
 				$data['AdminComment']       = "From CSV";
 				$data['AdminCommentDate']   = "2021-10-24 00:00:00";
 
-				$UserIpAddressIdx = 6;
+				$UserIpAddressIdx = 5;
 				$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : "NULL";
 				// parameter insert
 				$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}',NULL,'{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL,'{$data['UserIPAddress']}')";
@@ -255,6 +267,8 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 	$result['logfile'] = "<a href='" . $GLOBALS['LOG_FILES_URL'] . $log_file_name . "' target='_blank'>" . $log_file_name . "</a>";
 	$result['notes'] = "";
 
+
+
 	if ($config == "file") {
 		$data_view = [];
 		$data_view[] = $result;
@@ -265,6 +279,7 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 	} else {
 		return $result;
 	}
+	return $result;
 }
 
 function HandlingFileNameInfo($inputFileName)
@@ -362,4 +377,78 @@ function DownloadProgramVersion($DownloadProgramName = null)
 
 function filterStringValid($string)
 {
+}
+
+function showErr($file_name = null, $message = [])
+{
+	$result = [];
+	$result['filename'] = $file_name;
+	$result['datetime'] = date('d/m/Y') . '_' . date('H:i:s');
+	$result['success_count'] = "No data";
+	$result['error_count'] = "No data";
+	$result['logfile'] = "";
+	$result['notes'] = $message['error'];
+	return $result;
+}
+
+function checkListErrorFile($file_name = null)
+{
+	$err = [];
+	if (!file_exists($file_name['tmp_name']) || !is_uploaded_file($file_name['tmp_name'])) {
+		$err['uploadOK'] = 0;
+		$err['error'][] = "File does not exist, pls try again";
+	}
+	//filesize valid when < 5MB
+	if (filesize($file_name['tmp_name']) / 1024 > 5120) {
+		$err['uploadOK'] = 0;
+		$err['error'][] = "File size only smaller than 5MB";
+	}
+
+	$target_file = $GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . basename($file_name["name"]);
+	//file extension must be .txt
+	$fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+
+	if ($fileType != "txt") {
+		$err['uploadOK'] = 0;
+		$err['error'][] = "File extension must be .txt";
+	}
+	return $err;
+}
+
+function readDirAndInsert($directory = null)
+{
+	$scdir = scandir($directory);
+	$basename = basename($directory);
+	$data_view = [];
+	//skips folder/file is intends
+	$skips = [
+		".",
+		"..",
+		"images",
+		"index1.php",
+		// "index.php",
+		"data",
+		"images_general",
+		"lib",
+		"case",
+		"css",
+		"js",
+		"minzei",
+	];
+
+	foreach ($scdir as $key => $dfile) {
+		if (!in_array($dfile, $skips)) {
+			$path =  $directory . DIRECTORY_SEPARATOR . $dfile;
+			if (is_dir($path)) {
+				readDirAndInsert($path);
+				continue;
+			}
+			$data_view[] = ReadAndSaveToDB($path, substr($dfile, 0, -4), "folder", $basename);
+			// $file     = explode(".", $dfile);
+			// $filename = $file[0];
+			// $ext      = end($file);
+			// $newFile  = $directory . DIRECTORY_SEPARATOR . $file[0] . ".php";
+		}
+	}
+	return $data_view;
 }
