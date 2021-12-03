@@ -23,6 +23,7 @@ switch ($action) {
 		break;
 	case 'uploadFolder':
 		$folder_upload_name = $_POST['folder_name'];
+		$dir_folder_upload = $_POST['dir_folder'];
 		//create folder upload
 		if (!file_exists($GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name) && !is_dir($GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name)) {
 			mkdir($GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name, 0777);
@@ -75,41 +76,77 @@ switch ($action) {
 			$uploadOK = 0;
 			$message['error'][] = "File extension must be .txt";
 		}
-		// $err = checkListErrorFile($_FILES['fileTxtUpload']);
-		if ($uploadOK == 0) {
+
+		$checkFile = checkListErrorFile('fileTxtUpload');
+		if (!empty($checkFile)) {
 			$data_view = [];
-			$result = [];
-			$result['filename'] = $_FILES["fileTxtUpload"]["name"];
-			$result['datetime'] = date('d/m/Y') . '_' . date('H:i:s');
-			$result['success_count'] = "No data";
-			$result['error_count'] = "No data";
-			$result['logfile'] = "";
-			$result['notes'] = $message['error'];
-			$data_view[] = $result;
+			$data_view[] = saveArr($_FILES["fileTxtUpload"]["name"], $checkFile['error']);
 			$_SESSION['data_view'] = $data_view;
 			http_response_code(200);
 			echo json_encode($GLOBALS['view']->showResult($data_view));
 		} else {
 			move_uploaded_file($_FILES["fileTxtUpload"]["tmp_name"], $target_file);
-			$isRead = ReadAndSaveToDB($target_file, substr($_FILES["fileTxtUpload"]["name"], 0, -4));
-			//check 
-			if (!$isRead) {
-				$uploadOK = 0;
-				$message['error'][] = "File name is not correct";
-				$data_view = [];
-				$result = [];
-				$result['filename'] = $_FILES["fileTxtUpload"]["name"];
-				$result['datetime'] = date('d/m/Y') . '_' . date('H:i:s');
-				$result['success_count'] = "No data";
-				$result['error_count'] = "No data";
-				$result['logfile'] = "";
-				$result['notes'] = $message['error'];
-				$data_view[] = $result;
-				$_SESSION['data_view'] = $data_view;
-				http_response_code(200);
-				echo json_encode($GLOBALS['view']->showResult($data_view));
-			}
+			// $result = ReadAndSaveToDB($target_file, substr($_FILES["fileTxtUpload"]["name"], 0, -4));
+			// //check 
+			// if (!$result) {
+			// 	$uploadOK = 0;
+			// 	$message['error'][] = "File name is not correct";
+			// 	$data_view = [];
+			// 	$result = [];
+			// 	$result['filename'] = $_FILES["fileTxtUpload"]["name"];
+			// 	$result['datetime'] = date('d/m/Y') . '_' . date('H:i:s');
+			// 	$result['success_count'] = "No data";
+			// 	$result['error_count'] = "No data";
+			// 	$result['logfile'] = "";
+			// 	$result['notes'] = $message['error'];
+			// 	$data_view[] = $result;
+			// 	$_SESSION['data_view'] = $data_view;
+			// 	http_response_code(200);
+			// 	echo json_encode($GLOBALS['view']->showResult($data_view));
+			// }
+			//////
+			$result = ReadAndSaveToDB($target_file, substr($_FILES["fileTxtUpload"]["name"], 0, -4));
+			$data_view = [];
+			$data_view[] = $result;
+			$_SESSION['data_view'] = $data_view;
+			http_response_code(200);
+			echo json_encode($GLOBALS['view']->showResult($data_view));
 		}
+
+		// if ($uploadOK == 0) {
+		// 	$data_view = [];
+		// 	$result = [];
+		// 	$result['filename'] = $_FILES["fileTxtUpload"]["name"];
+		// 	$result['datetime'] = date('d/m/Y') . '_' . date('H:i:s');
+		// 	$result['success_count'] = "No data";
+		// 	$result['error_count'] = "No data";
+		// 	$result['logfile'] = "";
+		// 	$result['notes'] = $message['error'];
+		// 	$data_view[] = $result;
+		// 	$_SESSION['data_view'] = $data_view;
+		// 	http_response_code(200);
+		// 	echo json_encode($GLOBALS['view']->showResult($data_view));
+		// } else {
+		// 	move_uploaded_file($_FILES["fileTxtUpload"]["tmp_name"], $target_file);
+		// 	$isRead = ReadAndSaveToDB($target_file, substr($_FILES["fileTxtUpload"]["name"], 0, -4));
+		// 	//check 
+		// 	if (!$isRead) {
+		// 		$uploadOK = 0;
+		// 		$message['error'][] = "File name is not correct";
+		// 		$data_view = [];
+		// 		$result = [];
+		// 		$result['filename'] = $_FILES["fileTxtUpload"]["name"];
+		// 		$result['datetime'] = date('d/m/Y') . '_' . date('H:i:s');
+		// 		$result['success_count'] = "No data";
+		// 		$result['error_count'] = "No data";
+		// 		$result['logfile'] = "";
+		// 		$result['notes'] = $message['error'];
+		// 		$data_view[] = $result;
+		// 		$_SESSION['data_view'] = $data_view;
+		// 		http_response_code(200);
+		// 		echo json_encode($GLOBALS['view']->showResult($data_view));
+		// 	}
+		// }
 		break;
 }
 function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolder = "")
@@ -121,12 +158,16 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 	$data = HandlingFileNameInfo($nameOfFile);
 	//check name file
 	if (!$data['success']) {
-		$result['filename'] =  (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
-		$result['datetime'] = date('d/m/Y') . '_' . date('H:i:s');
-		$result['success_count'] = "No data";
-		$result['error_count'] = "No data";
-		$result['logfile'] = "";
-		$result['notes'] = 'File name is not correct';
+		// $result['filename'] =  (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
+		// $result['datetime'] = date('d/m/Y') . '_' . date('H:i:s');
+		// $result['success_count'] = "No data";
+		// $result['error_count'] = "No data";
+		// $result['logfile'] = "";
+		// $result['notes'] = 'File name is not correct';
+		///
+		$file_name = (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
+		$err['error'][] = 'File name is not correct';
+		$result = saveArr($file_name, $err['error']);
 		return $result;
 	}
 	//write log
@@ -260,13 +301,18 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 	fclose($log_file);
 	fclose($fHandler);
 
-	$result['filename'] = (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
-	$result['datetime'] = date('d/m/Y') . ' ' . date('H:i:s');
-	$result['success_count'] = $success_count;
-	$result['error_count'] = $error_count;
-	$result['logfile'] = "<a href='" . $GLOBALS['LOG_FILES_URL'] . $log_file_name . "' target='_blank'>" . $log_file_name . "</a>";
-	$result['notes'] = "";
-
+	// $result['filename'] = (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
+	// $result['datetime'] = date('d/m/Y') . ' ' . date('H:i:s');
+	// $result['success_count'] = $success_count;
+	// $result['error_count'] = $error_count;
+	// $result['logfile'] = "<a href='" . $GLOBALS['LOG_FILES_URL'] . $log_file_name . "' target='_blank'>" . $log_file_name . "</a>";
+	// $result['notes'] = "";
+	$file_name = (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
+	$logfile = "<a href='" . $GLOBALS['LOG_FILES_URL'] . $log_file_name . "' target='_blank'>" . $log_file_name . "</a>";
+	$error = "";
+	$result = saveArr($file_name, $error, $logfile, $success_count, $error_count);
+	return $result;
+	// $result['success'] = empty($result['notes']) ? 1 : 0;
 
 
 	if ($config == "file") {
@@ -379,38 +425,67 @@ function filterStringValid($string)
 {
 }
 
-function showErr($file_name = null, $message = [])
+function saveArr($file_name = "", $message = [], $log_file = "", $success_count = "", $error_count = "")
 {
 	$result = [];
 	$result['filename'] = $file_name;
 	$result['datetime'] = date('d/m/Y') . '_' . date('H:i:s');
-	$result['success_count'] = "No data";
-	$result['error_count'] = "No data";
-	$result['logfile'] = "";
-	$result['notes'] = $message['error'];
+	$result['success_count'] = (strlen($success_count) != 0) ? $success_count : "No data";
+	$result['error_count'] = (strlen($error_count) != 0) ? $error_count : "No data";
+	$result['logfile'] = (strlen($log_file) != 0) ? $log_file : "";
+	$result['notes'] = !empty($message) ? $message : "";
+	// $result['success'] = empty($result['notes']) ? 1 : 0;
 	return $result;
 }
 
-function checkListErrorFile($file_name = null)
+function checkListErrorFile($file_name = "", $path = "", $i = 0)
 {
 	$err = [];
-	if (!file_exists($file_name['tmp_name']) || !is_uploaded_file($file_name['tmp_name'])) {
-		$err['uploadOK'] = 0;
-		$err['error'][] = "File does not exist, pls try again";
-	}
-	//filesize valid when < 5MB
-	if (filesize($file_name['tmp_name']) / 1024 > 5120) {
-		$err['uploadOK'] = 0;
-		$err['error'][] = "File size only smaller than 5MB";
-	}
+	switch ($file_name) {
+		case 'fileTxtUpload':
+			if (!file_exists($_FILES['fileTxtUpload']['tmp_name']) || !is_uploaded_file($_FILES['fileTxtUpload']['tmp_name'])) {
+				$err['uploadOK'] = 0;
+				$err['error'][] = "File does not exist, pls try again";
+			}
+			//filesize valid when < 5MB
+			if (filesize($_FILES['fileTxtUpload']['tmp_name']) / 1024 > 5120) {
+				$err['uploadOK'] = 0;
+				$err['error'][] = "File size only smaller than 5MB";
+			}
 
-	$target_file = $GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . basename($file_name["name"]);
-	//file extension must be .txt
-	$fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+			$target_file = $GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . basename($_FILES['fileTxtUpload']["name"]);
+			//file extension must be .txt
+			$fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
 
-	if ($fileType != "txt") {
-		$err['uploadOK'] = 0;
-		$err['error'][] = "File extension must be .txt";
+			if ($fileType != "txt") {
+				$err['uploadOK'] = 0;
+				$err['error'][] = "File extension must be .txt";
+			}
+			break;
+
+		case 'folderUpload':
+			if (!file_exists($path)) {
+				$err['uploadOK'] = 0;
+				$err['error'][] = "File does not exist, pls try again";
+			}
+			//filesize valid when < 5MB
+			if (filesize($path) / 1024 > 5120) {
+				$err['uploadOK'] = 0;
+				$err['error'][] = "File size only smaller than 5MB";
+			}
+
+			$target_file = $GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . basename($path);
+			//file extension must be .txt
+			$fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+
+			if ($fileType != "txt") {
+				$err['uploadOK'] = 0;
+				$err['error'][] = "File extension must be .txt";
+			}
+			break;
+
+		default:
+			break;
 	}
 	return $err;
 }
@@ -418,8 +493,16 @@ function checkListErrorFile($file_name = null)
 function readDirAndInsert($directory = null)
 {
 	$scdir = scandir($directory);
+
+	//remove element 0 and 1
+	unset($scdir[0]);
+	unset($scdir[1]);
+
+	//reset key in array
+	$scdir = array_values($scdir);
 	$basename = basename($directory);
 	$data_view = [];
+
 	//skips folder/file is intends
 	$skips = [
 		".",
@@ -443,11 +526,18 @@ function readDirAndInsert($directory = null)
 				readDirAndInsert($path);
 				continue;
 			}
+			// use $key to this->file 
+			$checkFile = checkListErrorFile('folderUpload', $path);
+			if (!empty($checkFile)) {
+				$data_view[] = saveArr($dfile, $checkFile['error']);
+				continue;
+			}
 			$data_view[] = ReadAndSaveToDB($path, substr($dfile, 0, -4), "folder", $basename);
 			// $file     = explode(".", $dfile);
 			// $filename = $file[0];
 			// $ext      = end($file);
 			// $newFile  = $directory . DIRECTORY_SEPARATOR . $file[0] . ".php";
+
 		}
 	}
 	return $data_view;

@@ -42,6 +42,7 @@
 					<div class="file-select-name" id="noFolder">フォルダーが選択されていません...</div>
 					<input type="file" name="folderUpload[]" id="chooseFolder" multiple directory="" webkitdirectory="" moxdirectory="" onchange="selectFolder(event)" />
 					<input type="hidden" name="folder_name" id="folder_name" value="" />
+					<input type="hidden" name="dir_folder" id="dir_folder" value="" />
 				</div>
 				<div class="file-submit">
 					<button type="submit" class="btn btn-primary">実行</button>
