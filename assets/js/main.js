@@ -53,17 +53,6 @@ function selectFolder(e) {
 
     $("#folder_name").val(folder[0]);
     $("#dir_folder").val(JSON.stringify(allfileName)); //get dir folder
-    // $("#dir_folder1").data("dir1", theFiles); //get dir folder
-    // console.log(JSON.stringify(theFiles));
-    // console.log(typeof theFiles);
-    // console.log(JSON.parse(theFiles));
-    // console.log(e.target.files);
-    // const jsontheFiles = JSON.stringify(e.target.files);
-    // console.log($("#dir_folder").val);
-    // console.log(JSON.parse(jsontheFiles));
-
-    console.log(allfileName);
-    console.log(typeof JSON.stringify(allfileName));
 
     $("#noFolder").text(folder[0]);
     $(".file-upload").addClass("active");
