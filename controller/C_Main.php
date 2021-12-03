@@ -24,6 +24,18 @@ switch ($action) {
 	case 'uploadFolder':
 		$folder_upload_name = $_POST['folder_name'];
 		$dir_folder_upload = $_POST['dir_folder'];
+		$fullPath = explode($dir_folder_upload, ",");
+
+		$json_decode = json_decode($dir_folder_upload);
+		$json_encode = json_encode($dir_folder_upload);
+
+		$arrFullPath = [];
+		foreach ($json_decode as $key => $value) {
+			$file = explode("/", $value);
+			$file_name = end($file);
+			$arrFullPath[$value] = $file_name;
+		}
+
 		//create folder upload
 		if (!file_exists($GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name) && !is_dir($GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name)) {
 			mkdir($GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name, 0777);
@@ -35,17 +47,17 @@ switch ($action) {
 		foreach ($_FILES['folderUpload']['name'] as $i => $name) {
 			if (strlen($_FILES['folderUpload']['name'][$i]) > 1) {
 				$target_file = $GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name . DIRECTORY_SEPARATOR . basename($_FILES['folderUpload']['name'][$i]);
-				$fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
+				// $fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
 
-				if ($fileType != "txt") {
-					$uploadOK = 0;
-					$note = "File extension must be txt";
-				}
+				// if ($fileType != "txt") {
+				// 	$uploadOK = 0;
+				// 	$note = "File extension must be txt";
+				// }
 				move_uploaded_file($_FILES['folderUpload']['tmp_name'][$i], $target_file);
 				// $data_view[] = ReadAndSaveToDB($target_file, substr($_FILES["folderUpload"]["name"][$i], 0, -4), "folder", $folder_upload_name);
 			}
 		}
-		$data_view = readDirAndInsert($target_dir);
+		$data_view = readDirAndInsert($target_dir, $arrFullPath);
 		// echo '<pre>';
 		// print_r("countFileInDir:" . @$_SESSION['countFileInDir']);
 		// echo '<pre>';
@@ -58,25 +70,8 @@ switch ($action) {
 		$message = [];
 		$uploadOK = 1;
 		$err = "";
-		if (!file_exists($_FILES['fileTxtUpload']['tmp_name']) || !is_uploaded_file($_FILES['fileTxtUpload']['tmp_name'])) {
-			$uploadOK = 0;
-			$message['error'][] = "File does not exist, pls try again";
-		}
-		//filesize valid when < 5MB
-		if (filesize($_FILES['fileTxtUpload']['tmp_name']) / 1024 > 5120) {
-			$uploadOK = 0;
-			$message['error'][] = "File size only smaller than 5MB";
-		}
 
 		$target_file = $GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . basename($_FILES["fileTxtUpload"]["name"]);
-		//file extension must be .txt
-		$fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-
-		if ($fileType != "txt") {
-			$uploadOK = 0;
-			$message['error'][] = "File extension must be .txt";
-		}
-
 		$checkFile = checkListErrorFile('fileTxtUpload');
 		if (!empty($checkFile)) {
 			$data_view = [];
@@ -165,7 +160,8 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 		// $result['logfile'] = "";
 		// $result['notes'] = 'File name is not correct';
 		///
-		$file_name = (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
+		// $file_name = (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
+		$file_name = $nameOfFolder;
 		$err['error'][] = 'File name is not correct';
 		$result = saveArr($file_name, $err['error']);
 		return $result;
@@ -307,7 +303,8 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 	// $result['error_count'] = $error_count;
 	// $result['logfile'] = "<a href='" . $GLOBALS['LOG_FILES_URL'] . $log_file_name . "' target='_blank'>" . $log_file_name . "</a>";
 	// $result['notes'] = "";
-	$file_name = (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
+	// $file_name = (strlen($nameOfFolder) != 0) ? $nameOfFolder . "/" . $nameOfFile . ".txt" : $nameOfFile . ".txt";
+	$file_name = $nameOfFolder;
 	$logfile = "<a href='" . $GLOBALS['LOG_FILES_URL'] . $log_file_name . "' target='_blank'>" . $log_file_name . "</a>";
 	$error = "";
 	$result = saveArr($file_name, $error, $logfile, $success_count, $error_count);
@@ -469,10 +466,10 @@ function checkListErrorFile($file_name = "", $path = "", $i = 0)
 				$err['error'][] = "File does not exist, pls try again";
 			}
 			//filesize valid when < 5MB
-			if (filesize($path) / 1024 > 5120) {
-				$err['uploadOK'] = 0;
-				$err['error'][] = "File size only smaller than 5MB";
-			}
+			// if (filesize($path) / 1024 > 5120) {
+			// 	$err['uploadOK'] = 0;
+			// 	$err['error'][] = "File size only smaller than 5MB";
+			// }
 
 			$target_file = $GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . basename($path);
 			//file extension must be .txt
@@ -490,7 +487,7 @@ function checkListErrorFile($file_name = "", $path = "", $i = 0)
 	return $err;
 }
 
-function readDirAndInsert($directory = null)
+function readDirAndInsert_BK($directory = null, $fullPath = "")
 {
 	$scdir = scandir($directory);
 
@@ -533,6 +530,59 @@ function readDirAndInsert($directory = null)
 				continue;
 			}
 			$data_view[] = ReadAndSaveToDB($path, substr($dfile, 0, -4), "folder", $basename);
+			// $file     = explode(".", $dfile);
+			// $filename = $file[0];
+			// $ext      = end($file);
+			// $newFile  = $directory . DIRECTORY_SEPARATOR . $file[0] . ".php";
+
+		}
+	}
+	return $data_view;
+}
+
+
+function readDirAndInsert($directory = null, $scdir = [])
+{
+	// $scdir = scandir($directory);
+	//remove element 0 and 1
+	// unset($scdir[0]);
+	// unset($scdir[1]);
+
+	//reset key in array
+	// $scdir = array_values($scdir);
+	// $basename = basename($directory);
+	$data_view = [];
+
+	//skips folder/file is intends
+	$skips = [
+		".",
+		"..",
+		"images",
+		"index1.php",
+		// "index.php",
+		"data",
+		"images_general",
+		"lib",
+		"case",
+		"css",
+		"js",
+		"minzei",
+	];
+
+	foreach ($scdir as $key => $aliasFile) {
+		if (!in_array($aliasFile, $skips)) {
+			$path =  $directory . DIRECTORY_SEPARATOR . $aliasFile;
+			if (is_dir($path)) {
+				readDirAndInsert($directory, $path);
+				continue;
+			}
+			// use $key to this->file 
+			$checkFile = checkListErrorFile('folderUpload', $path);
+			if (!empty($checkFile)) {
+				$data_view[] = saveArr($key, $checkFile['error']);
+				continue;
+			}
+			$data_view[] = ReadAndSaveToDB($path, substr($aliasFile, 0, -4), "folder", $key);
 			// $file     = explode(".", $dfile);
 			// $filename = $file[0];
 			// $ext      = end($file);

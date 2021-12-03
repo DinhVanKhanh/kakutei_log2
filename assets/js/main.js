@@ -46,8 +46,25 @@ function selectFolder(e) {
     let theFiles = e.target.files;
     let relativePath = theFiles[0].webkitRelativePath;
     let folder = relativePath.split("/");
+    let allfileName = [];
+    $.each(theFiles, function (index, value) {
+        allfileName[index] = value.webkitRelativePath;
+    });
+
     $("#folder_name").val(folder[0]);
-    $("#dir_folder").val(relativePath); //get dir folder
+    $("#dir_folder").val(JSON.stringify(allfileName)); //get dir folder
+    // $("#dir_folder1").data("dir1", theFiles); //get dir folder
+    // console.log(JSON.stringify(theFiles));
+    // console.log(typeof theFiles);
+    // console.log(JSON.parse(theFiles));
+    // console.log(e.target.files);
+    // const jsontheFiles = JSON.stringify(e.target.files);
+    // console.log($("#dir_folder").val);
+    // console.log(JSON.parse(jsontheFiles));
+
+    console.log(allfileName);
+    console.log(typeof JSON.stringify(allfileName));
+
     $("#noFolder").text(folder[0]);
     $(".file-upload").addClass("active");
 }
@@ -61,6 +78,7 @@ function resetInput() {
 }
 let formUploadFile = $("#formUploadFile");
 formUploadFile.submit(function (e) {
+    console.log(e.target.files);
     e.preventDefault();
 
     if ($("#chooseFile").val() == "" && $("#chooseFolder").val() == "") {
