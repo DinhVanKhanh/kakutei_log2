@@ -141,7 +141,7 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 					$UserIDPartner = "";
 				}
 
-				//UserIDPartner
+				//UserSerialNumber
 				$UserSerialNumberIdx = 6;
 				$UserSerialNumber = (array_key_exists($UserSerialNumberIdx, $line)) ? $line[$UserSerialNumberIdx] : "";
 				if (strlen($UserSerialNumber) == 0 && strlen($UserIDPartner) == 0) {

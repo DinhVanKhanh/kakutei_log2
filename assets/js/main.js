@@ -16,6 +16,8 @@ function loadList() {
             $("#table_id tbody").html(data);
             resetInput();
             $("#scLoading").hide();
+            //check type of upload
+            changeTypeOfUpload();
         },
         error: function (xhr, textStatus, errorThrown) {
             console.warn(xhr.responseText);
