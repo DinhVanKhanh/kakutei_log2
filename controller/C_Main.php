@@ -48,20 +48,10 @@ switch ($action) {
 			if (strlen($_FILES['folderUpload']['name'][$i]) > 1) {
 				$target_file = $GLOBALS['TARGET_FOLDER_UPLOAD_DIR'] . $folder_upload_name . DIRECTORY_SEPARATOR . basename($_FILES['folderUpload']['name'][$i]);
 				// $fileType = strtolower(pathinfo($target_file, PATHINFO_EXTENSION));
-
-				// if ($fileType != "txt") {
-				// 	$uploadOK = 0;
-				// 	$note = "File extension must be txt";
-				// }
 				move_uploaded_file($_FILES['folderUpload']['tmp_name'][$i], $target_file);
-				// $data_view[] = ReadAndSaveToDB($target_file, substr($_FILES["folderUpload"]["name"][$i], 0, -4), "folder", $folder_upload_name);
 			}
 		}
 		$data_view = readDirAndInsert($target_dir, $arrFullPath);
-		// echo '<pre>';
-		// print_r("countFileInDir:" . @$_SESSION['countFileInDir']);
-		// echo '<pre>';
-		// die();
 		$_SESSION['data_view'] = $data_view;
 		http_response_code(200);
 		echo json_encode($GLOBALS['view']->showResult($data_view));
@@ -100,7 +90,7 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 	$data = HandlingFileNameInfo($nameOfFile);
 	//check name file
 	if (!$data['success']) {
-		$file_name = $nameOfFolder;
+		$file_name = !empty($nameOfFolder) ? $nameOfFolder : $nameOfFile;
 		$err['error'][] = 'File name is not correct';
 		$result = saveArr($file_name, $err['error']);
 		return $result;
@@ -128,22 +118,22 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 			//partner
 			if ($data['brandCategory'] == 'partner') {
 				//if userSerialNumber is NULL, not process
-				if (array_key_exists(2, $line)) {
+				if (!empty($line[2])) {
 					$UserIDPartner = trim($line[2]);
-					$UserClassification = 3;
-				} elseif (array_key_exists(3, $line)) {
+					$UserClassification = "3";
+				} elseif (!empty($line[3])) {
 					$UserIDPartner = trim($line[3]);
-					$UserClassification = 4;
-				} elseif (array_key_exists(4, $line)) {
+					$UserClassification = "4";
+				} elseif (!empty($line[4])) {
 					$UserIDPartner = trim($line[4]);
-					$UserClassification = 5;
+					$UserClassification = "5";
 				} else {
 					$UserIDPartner = "";
 				}
 
 				//UserSerialNumber
 				$UserSerialNumberIdx = 6;
-				$UserSerialNumber = (array_key_exists($UserSerialNumberIdx, $line)) ? $line[$UserSerialNumberIdx] : "";
+				$UserSerialNumber = (!empty($line[$UserSerialNumberIdx])) ? $line[$UserSerialNumberIdx] : "";
 				if (strlen($UserSerialNumber) == 0 && strlen($UserIDPartner) == 0) {
 					continue;
 				}
@@ -155,31 +145,31 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 				$data['AdminCommentDate']   = "2021-10-24 00:00:00";
 
 				$UserIpAddressIdx = 7;
-				$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : "NULL";
+				$data['UserIPAddress']      = (!empty($line[$UserIpAddressIdx])) ? $line[$UserIpAddressIdx] : "";
 				// parameter insert
 				$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}','{$data['UserIDPartner']}','{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL,'{$data['UserIPAddress']}')";
 			} else {
 				//user
 				$UserSerialNumberIdx = 2;
-				$UserSerialNumber = (array_key_exists($UserSerialNumberIdx, $line)) ? trim($line[$UserSerialNumberIdx]) : "";
+				$UserSerialNumber = (!empty($line[$UserSerialNumberIdx])) ? trim($line[$UserSerialNumberIdx]) : "";
 				if (strlen($UserSerialNumber) == 0) {
 					continue;
 				}
 				$data['DownloadDate']       = $line[0] . ' ' . $line[1];
 				$data['UserSerialNumber']   = $UserSerialNumber;
-				$data['UserClassification'] = 2;
+				$data['UserClassification'] = "2";
 				$data['AdminComment']       = "From CSV";
 				$data['AdminCommentDate']   = "2021-10-24 00:00:00";
 
 				$UserIpAddressIdx = 5;
-				$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : "NULL";
+				$data['UserIPAddress']      = (!empty($line[$UserIpAddressIdx])) ? $line[$UserIpAddressIdx] : "";
 				// parameter insert
 				$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}',NULL,'{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL,'{$data['UserIPAddress']}')";
 			}
 		} else {
 			//if userSerialNumber is NULL, not process
 			$UserSerialNumberIdx = 2;
-			$UserSerialNumber = (array_key_exists($UserSerialNumberIdx, $line)) ? trim($line[$UserSerialNumberIdx]) : "";
+			$UserSerialNumber = (!empty($line[$UserSerialNumberIdx])) ? trim($line[$UserSerialNumberIdx]) : "";
 			if (strlen($UserSerialNumber) == 0) {
 				continue;
 			}
@@ -190,7 +180,7 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 			$data['AdminCommentDate']   = "2021-10-21 00:00:00";
 
 			$UserIpAddressIdx = 6;
-			$data['UserIPAddress']      = (array_key_exists($UserIpAddressIdx, $line)) ? $line[$UserIpAddressIdx] : "";
+			$data['UserIPAddress']      = (!empty($line[$UserIpAddressIdx])) ? $line[$UserIpAddressIdx] : "";
 			// parameter insert
 			$para_ins .= ",('{$data['DownloadDate']}','{$data['DownloadProgramName']}', '{$data['DownloadProgramYear']}','{$data['DownloadProgramVersion']}','{$data['UserClassification']}','{$data['UserSerialNumber']}',NULL,'{$data['AdminComment']}','{$data['AdminCommentDate']}', NULL, NULL,'{$data['UserIPAddress']}')";
 		}
@@ -234,7 +224,7 @@ function ReadAndSaveToDB($inputFile, $nameOfFile, $config = "file", $nameOfFolde
 	fclose($log_file);
 	fclose($fHandler);
 
-	$file_name = $nameOfFolder;
+	$file_name = !empty($nameOfFolder) ? $nameOfFolder : $nameOfFile;
 	$logfile = "<a href='" . $GLOBALS['LOG_FILES_URL'] . $log_file_name . "' target='_blank'>" . $log_file_name . "</a>";
 	$error = "";
 	$result = saveArr($file_name, $error, $logfile, $success_count, $error_count);
@@ -382,7 +372,7 @@ function checkListErrorFile($file_name = "", $path = "", $i = 0)
 				$err['error'][] = "File does not exist, pls try again";
 			}
 			//filesize valid when < 5MB
-			if (filesize($path) / 1024 > 5120) {
+			if (@filesize($path) / 1024 > 5120) {
 				$err['uploadOK'] = 0;
 				$err['error'][] = "File size only smaller than 5MB";
 			}
